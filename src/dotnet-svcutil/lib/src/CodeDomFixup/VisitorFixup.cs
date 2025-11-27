@@ -4,6 +4,7 @@
 
 using System.Collections.Generic;
 using System.ServiceModel.Description;
+using Microsoft.Tools.ServiceModel.Svcutil.CodeDomFixup.CodeDomVisitors;
 
 namespace Microsoft.Tools.ServiceModel.Svcutil
 {
@@ -13,7 +14,8 @@ namespace Microsoft.Tools.ServiceModel.Svcutil
         {
             ArrayOfXElementTypeHelper arrayOfXElementTypeHelper = new ArrayOfXElementTypeHelper((generator.Options & ServiceContractGenerationOptions.InternalTypes) == ServiceContractGenerationOptions.InternalTypes, generator.TargetCompileUnit);
 
-            CodeDomVisitor[] visitors = new CodeDomVisitor[]
+            // Use List to dynamically build the visitor chain
+            List<CodeDomVisitor> visitorList = new List<CodeDomVisitor>(new CodeDomVisitor[]
                     {
                         new CodeNamespaceUniqueTypeFixer(),
                         new AttributeFixer(generator),
@@ -27,7 +29,17 @@ namespace Microsoft.Tools.ServiceModel.Svcutil
                         new CreateCallbackImpl((generator.Options & ServiceContractGenerationOptions.TaskBasedAsynchronousMethod) == ServiceContractGenerationOptions.TaskBasedAsynchronousMethod, generator),
                         new AddAsyncOpenClose(), // this one need to run after CreateCallbakImpl which provide name of VerifyCallbackEvents method
                         new TypeNameFixup()
-                    };
+                    });
+
+            // Add the CasingFixupVisitor only if the 'nameCase' option is set to 'camelcase'
+            if (options.NameCase.Equals("camelcase", System.StringComparison.OrdinalIgnoreCase))
+            {
+                visitorList.Add(new CasingFixupVisitor());
+            }
+
+            // Convert back to array for subsequent logic and return
+            CodeDomVisitor[] visitors = visitorList.ToArray();
+
 
             // Default behavior: Remove sync methods, so only async methods are generated.
             if (options.Sync != true && options.SyncOnly != true)
@@ -76,4 +88,3 @@ namespace Microsoft.Tools.ServiceModel.Svcutil
         }
     }
 }
-

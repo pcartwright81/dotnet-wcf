@@ -21,8 +21,9 @@ namespace Microsoft.Tools.ServiceModel.Svcutil
     {
         #region Options-related properties
         public const string UpdateServiceReferenceKey = "update";
-
+        public const string NameCaseKey = "nameCase";       
         public string UpdateServiceReferenceFolder { get { return GetValue<string>(UpdateServiceReferenceKey); } set { SetValue(UpdateServiceReferenceKey, value); } }
+         public string NameCase { get { return GetValue<string>(NameCaseKey); } set { SetValue(NameCaseKey, value); } }
         public override string Json { get { return Serialize<CommandProcessorOptions, OptionsSerializer<CommandProcessorOptions>>(); } }
 
         /// <summary>
@@ -59,7 +60,7 @@ namespace Microsoft.Tools.ServiceModel.Svcutil
         internal const string WCFCSParamsFileName = "ConnectedService.json";
         internal const string BaseServiceReferenceName = "ServiceReference";
 
-        private static readonly List<string> s_cmdLineOverwriteSwitches = new List<string> { Switches.NoLogo.Name, Switches.Verbosity.Name, Switches.ToolContext.Name, Switches.ProjectFile.Name, Switches.AcceptCertificate.Name, Switches.ServiceContract.Name };
+        private static readonly List<string> s_cmdLineOverwriteSwitches = new List<string> { Switches.NoLogo.Name, Switches.Verbosity.Name, Switches.ToolContext.Name, Switches.ProjectFile.Name, Switches.AcceptCertificate.Name, Switches.ServiceContract.Name, Switches.NameCase.Name };
 
         internal class CommandSwitches
         {
@@ -73,6 +74,7 @@ namespace Microsoft.Tools.ServiceModel.Svcutil
             public readonly CommandSwitch Internal = new CommandSwitch(InternalTypeAccessKey, "i", SwitchType.Flag);
             public readonly CommandSwitch MessageContract = new CommandSwitch(MessageContractKey, "mc", SwitchType.Flag);
             public readonly CommandSwitch Namespace = new CommandSwitch(NamespaceMappingsKey, "n", SwitchType.ValueList);
+            public readonly CommandSwitch NameCase = new CommandSwitch(NameCaseKey, "nc", SwitchType.SingletonValue);
             public readonly CommandSwitch NoBootstraping = new CommandSwitch(NoBootstrappingKey, "nb", SwitchType.Flag, OperationalContext.Infrastructure);
             public readonly CommandSwitch NoLogo = new CommandSwitch(NoLogoKey, "nl", SwitchType.Flag);
             public readonly CommandSwitch NoProjectUpdates = new CommandSwitch(NoProjectUpdatesKey, "npu", SwitchType.Flag, OperationalContext.Infrastructure);
@@ -107,7 +109,8 @@ namespace Microsoft.Tools.ServiceModel.Svcutil
 
             RegisterOptions(
                 new SingleValueOption<string>(UpdateServiceReferenceKey) { CanSerialize = false });
-
+            RegisterOptions(
+                new SingleValueOption<string>(NameCaseKey) { CanSerialize = true, DefaultValue = string.Empty });
             var typeReuseModeOption = this.GetOption(TypeReuseModeKey);
             typeReuseModeOption.Aliases.Add(Switches.NoTypeReuse.Name);
             typeReuseModeOption.ValueChanging += (s, e) => e.Value = ParseNoTypeReuseOptionValue(e.Value);

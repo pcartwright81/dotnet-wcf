@@ -52,6 +52,7 @@ namespace Microsoft.Tools.ServiceModel.Svcutil
                     ArgumentInfo.CreateFlagHelpInfo(     CommandProcessorOptions.Switches.Help.Name,                                                                string.Format(SR.HelpHelpFormat, CommandProcessorOptions.Switches.Help.Abbreviation)),
                     ArgumentInfo.CreateParameterHelpInfo(CommandProcessorOptions.Switches.ProjectFile.Name,       SR.ParametersProjectFile,                         string.Format(SR.HelpProjectFileFormat, CommandProcessorOptions.Switches.ProjectFile.Abbreviation)),
                     ArgumentInfo.CreateParameterHelpInfo(CommandProcessorOptions.Switches.OutputFile.Name,        SR.ParametersOut,                                 string.Format(SR.HelpOutFormat, CommandProcessorOptions.Switches.OutputFile.Abbreviation)),
+                    ArgumentInfo.CreateParameterHelpInfo(CommandProcessorOptions.Switches.NameCase.Name,          SR.ParametersNameCase,                            string.Format(SR.HelpNameCaseFormat, CommandProcessorOptions.Switches.NameCase.Abbreviation), true),
                     ArgumentInfo.CreateParameterHelpInfo(CommandProcessorOptions.Switches.Namespace.Name,         SR.ParametersNamespace,                           string.Format(SR.HelpNamespaceFormat, CommandProcessorOptions.Switches.Namespace.Abbreviation), true),
                     ArgumentInfo.CreateFlagHelpInfo(     CommandProcessorOptions.Switches.MessageContract.Name,                                                     string.Format(SR.HelpMessageContractFormat, CommandProcessorOptions.Switches.MessageContract.Abbreviation), true),
                     ArgumentInfo.CreateFlagHelpInfo(     CommandProcessorOptions.Switches.EnableDataBinding.Name,                                                   string.Format(SR.HelpEnableDataBindingFormat, CommandProcessorOptions.Switches.EnableDataBinding.Abbreviation)),
@@ -185,6 +186,8 @@ namespace Microsoft.Tools.ServiceModel.Svcutil
                     s_helpBuilder.AppendLine(paragraphHelper.AddIndentation(optionHelp, helpTextIndent));
                 }
             }
+
+            internal static ArgumentInfo CreateParameterHelpInfo(string name, object parametersNameCase, string v1, bool v2) => throw new NotImplementedException();
         }
 
         private class HelpCategory
