@@ -3,12 +3,11 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.CodeDom; // <-- ADDED: Includes CodeCompileUnit, MemberAttributes, etc.
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Microsoft.CodeDom;
 
+// Assuming Microsoft.Tools.ServiceModel.Svcutil namespace contains CodeDomVisitor
 namespace Microsoft.Tools.ServiceModel.Svcutil.CodeDomFixup.CodeDomVisitors
 {
     // A CodeDomVisitor that applies a PascalCase to camelCase conversion
@@ -16,8 +15,8 @@ namespace Microsoft.Tools.ServiceModel.Svcutil.CodeDomFixup.CodeDomVisitors
     internal class CasingFixupVisitor : CodeDomVisitor
     {
         private const string MessageContractAttributeName = "MessageContractAttribute";
+        private const string DataMemberAttributeName = "DataMemberAttribute"; // <-- ADDED
 
-        // Assuming the base class uses these signatures (VisitCodeCompileUnit is the entry point)
         protected override void Visit(CodeCompileUnit codeCompileUnit)
         {
             base.Visit(codeCompileUnit);
@@ -39,10 +38,42 @@ namespace Microsoft.Tools.ServiceModel.Svcutil.CodeDomFixup.CodeDomVisitors
             // Only convert public properties
             if ((codeMemberProperty.Attributes & MemberAttributes.Public) == MemberAttributes.Public)
             {
-                // Do not change property names in MessageContract types as they map directly to XML/SOAP elements.
+                // Do not change property names in MessageContract types (they map directly to XML/SOAP elements).
                 if (!IsMessageContractType(codeMemberProperty))
                 {
-                    codeMemberProperty.Name = ToCamelCase(codeMemberProperty.Name);
+                    string originalName = codeMemberProperty.Name;
+                    string camelCaseName = ToCamelCase(originalName);
+
+                    if (originalName != camelCaseName)
+                    {
+                        // 1. Rename the C# property
+                        codeMemberProperty.Name = camelCaseName;
+
+                        // 2. Check for and update DataMemberAttribute
+                        var dataMemberAttribute = codeMemberProperty.CustomAttributes.Cast<CodeAttributeDeclaration>()
+                            .FirstOrDefault(attr => attr.AttributeType.BaseType.EndsWith(DataMemberAttributeName));
+
+                        if (dataMemberAttribute != null)
+                        {
+                            // DataMemberAttribute controls the name on the wire. We must ensure it uses the camelCase name.
+
+                            var nameArgument = dataMemberAttribute.Arguments.Cast<CodeAttributeArgument>()
+                                .FirstOrDefault(arg => arg.Name == "Name");
+
+                            if (nameArgument == null)
+                            {
+                                // No 'Name' argument exists (it currently defaults to the PascalCase C# name).
+                                // Add a new 'Name' argument with the camelCase value.
+                                dataMemberAttribute.Arguments.Add(
+                                    new CodeAttributeArgument("Name", new CodePrimitiveExpression(camelCaseName)));
+                            }
+                            else
+                            {
+                                // An existing 'Name' argument needs its value updated.
+                                nameArgument.Value = new CodePrimitiveExpression(camelCaseName);
+                            }
+                        }
+                    }
                 }
             }
 
@@ -51,10 +82,10 @@ namespace Microsoft.Tools.ServiceModel.Svcutil.CodeDomFixup.CodeDomVisitors
 
         protected override void Visit(CodeMemberField codeMemberField)
         {
-            // Only convert private fields (likely backing fields)
+            // Logic for fields (typically backing fields) remains correct, 
+            // as they do not have a DataMemberAttribute to update.
             if ((codeMemberField.Attributes & MemberAttributes.AccessMask) == MemberAttributes.Private)
             {
-                // Strip leading underscore if present and convert to camelCase.
                 string fieldName = codeMemberField.Name.TrimStart('_');
                 codeMemberField.Name = ToCamelCase(fieldName);
             }

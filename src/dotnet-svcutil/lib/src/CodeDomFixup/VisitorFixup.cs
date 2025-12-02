@@ -32,7 +32,7 @@ namespace Microsoft.Tools.ServiceModel.Svcutil
                     });
 
             // Add the CasingFixupVisitor only if the 'nameCase' option is set to 'camelcase'
-            if (options.NameCase.Equals("camelcase", System.StringComparison.OrdinalIgnoreCase))
+            if (options.NameCase != null && options.NameCase.Equals("camelcase", System.StringComparison.OrdinalIgnoreCase))
             {
                 visitorList.Add(new CasingFixupVisitor());
             }
